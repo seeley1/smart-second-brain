@@ -1,0 +1,48 @@
+{
+  "name": "知识库每日同步",
+  "description": "每日自动同步多源知识到Obsidian",
+  "schedule": {
+    "type": "cron",
+    "expression": "0 10 * * *",
+    "timezone": "Asia/Shanghai"
+  },
+  "enabled": true,
+  "sources": [
+    {
+      "name": "douyin",
+      "enabled": true,
+      "save_path": "00-Raw/抖音笔记"
+    },
+    {
+      "name": "wechat",
+      "enabled": true,
+      "save_path": "00-Raw/公众号文章"
+    },
+    {
+      "name": "weread",
+      "enabled": true,
+      "save_path": "00-Raw/微信读书"
+    },
+    {
+      "name": "ima",
+      "enabled": true,
+      "save_path": "10-Schema/ima知识库"
+    }
+  ],
+  "processing": {
+    "auto_parse": true,
+    "generate_summary": true,
+    "add_tags": true,
+    "create_links": true
+  },
+  "output": {
+    "format": "markdown",
+    "template": "Raw-Layer-Template",
+    "save_to_vault": true
+  },
+  "notification": {
+    "enabled": true,
+    "method": "desktop",
+    "message": "✅ 知识库每日同步完成"
+  }
+}
