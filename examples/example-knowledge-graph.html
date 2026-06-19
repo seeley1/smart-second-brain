@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Second Brain - Example Knowledge Graph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        #graph {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .node {
+            cursor: pointer;
+        }
+        
+        .node-text {
+            font-size: 12px;
+            fill: #333;
+            text-anchor: middle;
+            pointer-events: none;
+            font-weight: 500;
+        }
+        
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.4;
+            stroke-width: 1.5px;
+        }
+        
+        .tooltip {
+            position: absolute;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border-radius: 8px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .tooltip strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #FFD700;
+        }
+        
+        .tooltip .tags {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #AAA;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 13px;
+        }
+        
+        #controls h3 {
+            margin-bottom: 12px;
+            color: #333;
+        }
+        
+        .control-group {
+            margin-bottom: 12px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 4px;
+            color: #666;
+        }
+        
+        .control-group input {
+            width: 100%;
+        }
+        
+        button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-right: 8px;
+        }
+        
+        button:hover {
+            background: #764ba2;
+        }
+        
+        #legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 12px;
+        }
+        
+        #legend h4 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <svg id="graph"></svg>
+        
+        <div id="controls">
+            <h3>📊 Knowledge Graph Controls</h3>
+            
+            <div class="control-group">
+                <label>🔗 Link Distance: <span id="distance-value">100</span></label>
+                <input type="range" id="distance" min="50" max="200" value="100">
+            </div>
+            
+            <div class="control-group">
+                <label>🧲 Charge Strength: <span id="charge-value">-300</span></label>
+                <input type="range" id="charge" min="-500" max="-100" value="-300">
+            </div>
+            
+            <div>
+                <button onclick="resetLayout()">🔄 Reset</button>
+                <button onclick="centerGraph()">🎯 Center</button>
+            </div>
+        </div>
+        
+        <div id="legend">
+            <h4>🏷️ Node Types</h4>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FF6B6B;"></div>
+                <span>核心 (Core)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4ECDC4;"></div>
+                <span>工具 (Tool)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #45B7D1;"></div>
+                <span>概念 (Concept)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #96CEB4;"></div>
+                <span>主题 (Topic)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FECA57;"></div>
+                <span>人物 (Person)</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tooltip" id="tooltip"></div>
+    
+    <script>
+        // Example graph data
+        const graphData = {
+            "nodes": [
+                {"id": "Smart Second Brain", "type": "核心", "category": "系统", "size": 25, "color": "#FF6B6B", "tags": ["核心", "系统"]},
+                {"id": "Obsidian", "type": "工具", "category": "知识管理", "size": 20, "color": "#4ECDC4", "tags": ["工具", "知识管理"]},
+                {"id": "WorkBuddy", "type": "工具", "category": "AI助手", "size": 20, "color": "#4ECDC4", "tags": ["工具", "AI"]},
+                {"id": "AI Agent", "type": "概念", "category": "技术", "size": 18, "color": "#45B7D1", "tags": ["概念", "AI"]},
+                {"id": "知识管理", "type": "概念", "category": "方法论", "size": 18, "color": "#45B7D1", "tags": ["概念", "方法论"]},
+                {"id": "费曼学习法", "type": "方法", "category": "学习", "size": 16, "color": "#FF9FF3", "tags": ["方法", "学习"]},
+                {"id": "投资", "type": "主题", "category": "金融", "size": 20, "color": "#96CEB4", "tags": ["主题", "金融"]},
+                {"id": "基金投资", "type": "主题", "category": "金融", "size": 15, "color": "#96CEB4", "tags": ["主题", "投资"]},
+                {"id": "Karpathy", "type": "人物", "category": "技术", "size": 15, "color": "#FECA57", "tags": ["人物", "AI"]},
+                {"id": "知识复利", "type": "概念", "category": "系统", "size": 18, "color": "#45B7D1", "tags": ["概念", "系统"]},
+                {"id": "抖音笔记", "type": "主题", "category": "内容", "size": 15, "color": "#96CEB4", "tags": ["主题", "内容"]},
+                {"id": "公众号文章", "type": "主题", "category": "内容", "size": 15, "color": "#96CEB4", "tags": ["主题", "内容"]}
+            ],
+            "edges": [
+                {"source": "Smart Second Brain", "target": "Obsidian", "relation": "使用"},
+                {"source": "Smart Second Brain", "target": "WorkBuddy", "relation": "核心组件"},
+                {"source": "Smart Second Brain", "target": "知识管理", "relation": "属于"},
+                {"source": "Smart Second Brain", "target": "知识复利", "relation": "核心价值"},
+                {"source": "WorkBuddy", "target": "AI Agent", "relation": "使用"},
+                {"source": "AI Agent", "target": "费曼学习法", "relation": "应用方法"},
+                {"source": "投资", "target": "基金投资", "relation": "包含"},
+                {"source": "Karpathy", "target": "Smart Second Brain", "relation": "实践案例"},
+                {"source": "Obsidian", "target": "知识管理", "relation": "工具支持"},
+                {"source": "Smart Second Brain", "target": "抖音笔记", "relation": "输入源"},
+                {"source": "Smart Second Brain", "target": "公众号文章", "relation": "输入源"}
+            ]
+        };
+        
+        // Set up SVG
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        const svg = d3.select("#graph")
+            .attr("width", width)
+            .attr("height", height);
+        
+        // Create tooltip
+        const tooltip = d3.select("#tooltip");
+        
+        // Create simulation
+        let simulation = d3.forceSimulation(graphData.nodes)
+            .force("link", d3.forceLink(graphData.edges)
+                .id(d => d.id)
+                .distance(100)
+            )
+            .force("charge", d3.forceManyBody()
+                .strength(-300)
+            )
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collision", d3.forceCollide()
+                .radius(d => d.size + 10)
+            );
+        
+        // Create links
+        const link = svg.append("g")
+            .attr("class", "links")
+            .selectAll("line")
+            .data(graphData.edges)
+            .enter()
+            .append("line")
+            .attr("class", "link");
+        
+        // Create nodes
+        const node = svg.append("g")
+            .attr("class", "nodes")
+            .selectAll("g")
+            .data(graphData.nodes)
+            .enter()
+            .append("g")
+            .attr("class", "node")
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended)
+            );
+        
+        // Add circles to nodes
+        node.append("circle")
+            .attr("r", d => d.size)
+            .attr("fill", d => d.color)
+            .attr("stroke", "#FFF")
+            .attr("stroke-width", 2);
+        
+        // Add text to nodes
+        node.append("text")
+            .attr("class", "node-text")
+            .attr("dy", d => d.size + 12)
+            .text(d => d.id);
+        
+        // Add tooltip events
+        node.on("mouseover", function(event, d) {
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", 1);
+            
+            tooltip.html(`
+                <strong>${d.id}</strong>
+                <div>Type: ${d.type}</div>
+                <div>Category: ${d.category}</div>
+                <div class="tags">Tags: ${d.tags ? d.tags.join(", ") : "None"}</div>
+            `)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", function() {
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
+        
+        // Update positions on simulation tick
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+            
+            node
+                .attr("transform", d => `translate(${d.x}, ${d.y})`);
+        });
+        
+        // Drag functions
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+        
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+        
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+        
+        // Control functions
+        function resetLayout() {
+            simulation.force("center", d3.forceCenter(width / 2, height / 2));
+            simulation.alpha(1).restart();
+        }
+        
+        function centerGraph() {
+            simulation.force("center", d3.forceCenter(width / 2, height / 2));
+            simulation.alpha(0.5).restart();
+        }
+        
+        // Update simulation on control change
+        d3.select("#distance").on("input", function() {
+            const value = this.value;
+            d3.select("#distance-value").text(value);
+            simulation.force("link").distance(Number(value));
+            simulation.alpha(0.5).restart();
+        });
+        
+        d3.select("#charge").on("input", function() {
+            const value = this.value;
+            d3.select("#charge-value").text(value);
+            simulation.force("charge").strength(Number(value));
+            simulation.alpha(0.5).restart();
+        });
+        
+        // Handle window resize
+        window.addEventListener("resize", () => {
+            const newWidth = window.innerWidth;
+            const newHeight = window.innerHeight;
+            
+            svg.attr("width", newWidth)
+               .attr("height", newHeight);
+            
+            simulation.force("center", d3.forceCenter(newWidth / 2, newHeight / 2));
+            simulation.alpha(0.5).restart();
+        });
+    </script>
+</body>
+</html>
