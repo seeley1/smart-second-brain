@@ -1,0 +1,61 @@
+{
+  "name": "知识精炼周度任务",
+  "description": "对本周知识进行精炼和优化",
+  "schedule": {
+    "type": "cron",
+    "expression": "0 20 * * 0",
+    "timezone": "Asia/Shanghai"
+  },
+  "enabled": true,
+  "scope": {
+    "target": "weekly",
+    "folder": "10-Schema",
+    "time_range": "this_week"
+  },
+  "refinement_rules": [
+    {
+      "name": "合并相关笔记",
+      "enabled": true,
+      "method": "merge_related_notes",
+      "similarity_threshold": 0.8,
+      "action": "merge_and_create_wiki"
+    },
+    {
+      "name": "更新知识关联",
+      "enabled": true,
+      "method": "update_knowledge_links",
+      "action": "add_bidirectional_links"
+    },
+    {
+      "name": "生成周度总结",
+      "enabled": true,
+      "method": "generate_weekly_summary",
+      "output_format": "markdown",
+      "save_path": "60-日记/周度总结"
+    }
+  ],
+  "output": {
+    "generate_wiki": true,
+    "wiki_template": "Wiki-Layer-Template",
+    "update_knowledge_graph": true,
+    "knowledge_graph_path": "output/knowledge_graph.html"
+  },
+  "notification": {
+    "enabled": true,
+    "method": "desktop",
+    "message": "✅ 知识精炼周度任务完成"
+  },
+  "reporting": {
+    "generate_report": true,
+    "report_format": "markdown",
+    "report_path": "60-日记/知识精炼报告",
+    "include_statistics": true,
+    "statistics": [
+      "notes_processed",
+      "notes_merged",
+      "wiki_created",
+      "links_updated",
+      "knowledge_graph_updated"
+    ]
+  }
+}
