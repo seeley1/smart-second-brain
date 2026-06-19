@@ -1,0 +1,39 @@
+{
+  "name": "Obsidian对话同步",
+  "description": "将WorkBuddy对话内容自动同步到Obsidian",
+  "schedule": {
+    "type": "cron",
+    "expression": "0 * * * *",
+    "timezone": "Asia/Shanghai"
+  },
+  "enabled": true,
+  "trigger": {
+    "type": "keyword",
+    "keywords": ["知识", "笔记", "总结", "note", "knowledge"],
+    "tags": ["#知识", "#笔记", "#总结"]
+  },
+  "processing": {
+    "extract_content": true,
+    "classify_by_keywords": true,
+    "generate_summary": true,
+    "add_tags": true,
+    "create_links": true
+  },
+  "output": {
+    "save_to_vault": true,
+    "folder_strategy": {
+      "知识": "10-Schema/对话知识",
+      "技术": "10-Schema/技术笔记",
+      "读书": "00-Raw/微信读书",
+      "视频": "00-Raw/抖音笔记",
+      "其他": "10-Schema/其他"
+    },
+    "template": "Schema-Layer-Template",
+    "format": "markdown"
+  },
+  "notification": {
+    "enabled": true,
+    "method": "desktop",
+    "message": "✅ 对话内容已同步到Obsidian"
+  }
+}
