@@ -1,0 +1,242 @@
+# Smart Second Brain - Configuration Example
+# Copy this file to config.yaml and edit with your settings
+
+# ==================== Core Configuration ====================
+
+# Path to your Obsidian vault (REQUIRED)
+vault_path: "/path/to/your/obsidian/vault"
+
+# ==================== AI Configuration ====================
+
+ai:
+  # AI model to use (options: mimo, gpt-4, claude, gemini)
+  model: "mimo"
+  
+  # API configuration
+  api_key: "your-api-key-here"
+  api_base: "https://api.example.com/v1/chat/completions"
+  
+  # Model parameters
+  temperature: 0.7
+  max_tokens: 2000
+  top_p: 0.9
+
+# ==================== WorkBuddy Configuration ====================
+
+workbuddy:
+  # WorkBuddy API endpoint
+  api_endpoint: "http://localhost:3000"
+  
+  # Automation task settings
+  automation_enabled: true
+  automation_interval: "daily"  # options: hourly, daily, weekly
+  
+  # Skills to enable
+  skills_enabled:
+    - "douyin-to-obsidian"
+    - "obsidian-sync"
+    - "knowledge-integration"
+    - "wechat-article-extractor"
+
+# ==================== Knowledge Layer Configuration ====================
+
+knowledge_layers:
+  # Raw Layer (00-Raw) - Original materials
+  raw_layer:
+    enabled: true
+    path: "00-Raw"
+    templates:
+      - "Douyin Notes"
+      - "WeChat Articles"
+      - "WeChat Reading"
+    
+  # Schema Layer (10-Schema) - Structured knowledge
+  schema_layer:
+    enabled: true
+    path: "10-Schema"
+    auto_parse: true  # Automatically parse raw notes
+    tagging_enabled: true
+    
+  # Wiki Layer (20-Wiki) - Refined output
+  wiki_layer:
+    enabled: true
+    path: "20-Wiki"
+    auto_synthesize: true  # Automatically synthesize from schema
+
+# ==================== Input Sources Configuration ====================
+
+input_sources:
+  # Douyin (TikTok China)
+  douyin:
+    enabled: true
+    auto_sync: true
+    save_path: "00-Raw/抖音笔记"
+    
+  # WeChat Official Accounts
+  wechat:
+    enabled: true
+    auto_sync: true
+    save_path: "00-Raw/公众号文章"
+    
+  # WeChat Reading (Weread)
+  weread:
+    enabled: true
+    auto_sync: true
+    save_path: "00-Raw/微信读书"
+    
+  # IMA Knowledge Base
+  ima:
+    enabled: true
+    auto_sync: true
+    save_path: "10-Schema/ima知识库"
+
+# ==================== Output Configuration ====================
+
+output:
+  # Article generation
+  article:
+    enabled: true
+    template: "Wiki-Layer-Template"
+    output_format: "markdown"
+    
+  # Video generation
+  video:
+    enabled: true
+    template: "video-script-template"
+    voice_clone_enabled: true
+    subtitle_enabled: true
+    
+  # Social media content
+  social_media:
+    enabled: true
+    platforms:
+      - "wechat"
+      - "weibo"
+      - "douyin"
+
+# ==================== Voice Clone Configuration ====================
+
+voice_clone:
+  enabled: true
+  engine: "mimo"  # options: mimo, voxcomm2, edge-tts
+  
+  # Reference audio for voice cloning
+  reference_audio: "/path/to/reference/audio.wav"
+  
+  # Output settings
+  output_format: "mp3"
+  sample_rate: 32000
+  
+  # Normalization
+  normalize_audio: true
+  target_loudness: -16  # LUFS
+
+# ==================== Knowledge Graph Configuration ====================
+
+knowledge_graph:
+  enabled: true
+  output_path: "output/knowledge_graph.html"
+  
+  # Visualization settings
+  visualization:
+    layout: "force-directed"  # options: force-directed, hierarchical, circular
+    node_size: 20
+    edge_thickness: 2
+    
+  # Colors
+  colors:
+    core_node: "#FF6B6B"
+    tool_node: "#4ECDC4"
+    concept_node: "#45B7D1"
+    topic_node: "#96CEB4"
+
+# ==================== Automation Tasks Configuration ====================
+
+automation_tasks:
+  # Daily knowledge sync
+  daily_sync:
+    enabled: true
+    schedule: "0 10 * * *"  # Every day at 10:00
+    sources:
+      - "douyin"
+      - "wechat"
+      - "weread"
+      - "ima"
+      
+  # Obsidian dialog sync
+  obsidian_sync:
+    enabled: true
+    schedule: "0 * * * *"  # Every hour
+    dialog_tags:
+      - "knowledge"
+      - "note"
+      - "summary"
+      
+  # Knowledge quality check
+  quality_check:
+    enabled: true
+    schedule: "30 22 * * *"  # Every day at 22:30
+    validation_rules:
+      - "cross_source_validation"
+      - "generativity_validation"
+      - "exclusivity_validation"
+      
+  # Weekly knowledge refinement
+  weekly_refinement:
+    enabled: true
+    schedule: "0 20 * * 0"  # Every Sunday at 20:00
+    refinement_rules:
+      - "merge_related_notes"
+      - "update_links"
+      - "generate_summary"
+
+# ==================== Logging Configuration ====================
+
+logging:
+  enabled: true
+  level: "INFO"  # options: DEBUG, INFO, WARNING, ERROR
+  log_path: "60-Diary/第二大脑系统日志"
+  log_format: "markdown"  # options: markdown, json, text
+  
+  # Log rotation
+  max_log_size: 10485760  # 10MB
+  keep_logs_days: 30
+
+# ==================== Advanced Configuration ====================
+
+advanced:
+  # Performance
+  max_concurrent_tasks: 4
+  request_timeout: 30
+  
+  # Caching
+  cache_enabled: true
+  cache_ttl: 3600  # 1 hour
+  
+  # Error handling
+  retry_failed_tasks: true
+  max_retry_attempts: 3
+  
+  # Notifications
+  notifications_enabled: true
+  notification_methods:
+    - "desktop"
+    - "email"
+
+# ==================== Example Usage ====================
+# 
+# 1. Copy this file to config.yaml:
+#    cp config.example.yaml config.yaml
+#
+# 2. Edit config.yaml with your settings:
+#    - Set vault_path to your Obsidian vault path
+#    - Set AI model and API key
+#    - Enable/disable features as needed
+#
+# 3. Run initialization script:
+#    python scripts/init_vault.py --config config/config.yaml
+#
+# 4. Start using Smart Second Brain!
+#    - Paste Douyin links to auto-save notes
+#    - Use WorkBuddy to sync conversations
+#    - Generate articles/videos from knowledge
