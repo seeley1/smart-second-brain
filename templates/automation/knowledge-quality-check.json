@@ -1,0 +1,69 @@
+{
+  "name": "知识质量验证",
+  "description": "对每日新增知识进行质量评估",
+  "schedule": {
+    "type": "cron",
+    "expression": "30 22 * * *",
+    "timezone": "Asia/Shanghai"
+  },
+  "enabled": true,
+  "scope": {
+    "target": "daily_new",
+    "folder": "00-Raw",
+    "time_range": "today"
+  },
+  "validation_rules": [
+    {
+      "name": "跨源验证",
+      "enabled": true,
+      "description": "检查知识是否来自多个可靠来源",
+      "method": "check_multiple_sources",
+      "threshold": 2,
+      "pass_criteria": "至少2个独立来源"
+    },
+    {
+      "name": "生成力验证",
+      "enabled": true,
+      "description": "检查知识是否能生成行动建议",
+      "method": "check_actionable_advice",
+      "threshold": 0.7,
+      "pass_criteria": "能生成具体行动建议"
+    },
+    {
+      "name": "排他性验证",
+      "enabled": true,
+      "description": "检查知识是否有独特价值",
+      "method": "check_unique_value",
+      "threshold": 0.6,
+      "pass_criteria": "有明显独特价值"
+    }
+  ],
+  "output": {
+    "save_report": true,
+    "report_path": "60-日记/知识质量验证报告",
+    "format": "markdown",
+    "template": "Quality-Report-Template"
+  },
+  "notification": {
+    "enabled": true,
+    "method": "desktop",
+    "message": "✅ 知识质量验证完成"
+  },
+  "actions": {
+    "high_quality": {
+      "score_threshold": 4,
+      "action": "move_to_schema",
+      "add_tag": "高质量"
+    },
+    "medium_quality": {
+      "score_threshold": 3,
+      "action": "keep_in_raw",
+      "add_tag": "待改进"
+    },
+    "low_quality": {
+      "score_threshold": 0,
+      "action": "mark_for_review",
+      "add_tag": "需审核"
+    }
+  }
+}
